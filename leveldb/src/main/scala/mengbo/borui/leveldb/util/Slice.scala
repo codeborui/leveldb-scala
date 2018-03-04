@@ -1,8 +1,9 @@
 package mengbo.borui.leveldb.util
 
 import java.io.{IOException, InputStream, OutputStream}
-import java.nio.ByteBuffer
+import java.nio.{ByteBuffer, ByteOrder}
 import java.nio.channels.{ClosedChannelException, FileChannel, GatheringByteChannel, ScatteringByteChannel}
+import java.nio.charset.Charset
 
 import com.google.common.base.Preconditions
 
@@ -12,7 +13,11 @@ import scala.util.control.Breaks
   * @author mengbo
   * @version 1.0
   */
-class Slice(val data: Array[Byte], val offset: Int, val length: Int) extends Comparable[Slice] {
+class Slice(private val data: Array[Byte],
+            private val offset: Int, private val length: Int)
+  extends Comparable[Slice] {
+
+  private var hash: Int = 0
 
   def this(data: Array[Byte]) = {
     this(data, 0, data.length)
@@ -121,7 +126,7 @@ class Slice(val data: Array[Byte], val offset: Int, val length: Int) extends Com
     data(realIndex) = value.toByte
   }
 
-  def setShort(index: Int, value: Short): Unit = {
+  def setShort(index: Int, value: Int): Unit = {
     Preconditions.checkPositionIndexes(index, index + SizeOf.SIZE_OF_SHORT, this.length)
     val realIndex: Int = offset + index
     data(realIndex) = value.toByte
@@ -256,22 +261,113 @@ class Slice(val data: Array[Byte], val offset: Int, val length: Int) extends Com
   }
 
   def slice(): Slice = {
-
+    slice(0, length)
   }
 
   def slice(index: Int, length: Int): Slice = {
     if (index == 0 && length == this.length) {
-      this
+      return this
     }
     if (index >= 0 && length == 0) {
-      Slices.EMPTY_SLICE
+      return Slices.EMPTY_SLICE
     }
     Preconditions.checkPositionIndexes(index, index + length, this.length)
     new Slice(data, offset + index, length)
   }
 
+  def input(): SliceInput = {
+    new SliceInput(this)
+  }
+
+  def output(): SliceOutput = {
+    new BasicSliceOutput(this)
+  }
+
+  def toByteBuffer: ByteBuffer = {
+    toByteBuffer(0, this.length)
+  }
+
+  def toByteBuffer(index: Int, length: Int): ByteBuffer = {
+    Preconditions.checkPositionIndexes(index, index + length, this.length)
+    ByteBuffer.wrap(data, offset + index, length).order(ByteOrder.LITTLE_ENDIAN)
+  }
+
+
+  override def equals(obj: scala.Any): Boolean = {
+    if (this == obj) {
+      return true
+    }
+
+    if (obj == null || this.getClass != obj.getClass) {
+      return false
+    }
+
+    val compareSlice: Slice = classOf[Slice].cast(obj)
+
+    if (length != compareSlice.length) {
+      return false
+    }
+
+    if (offset == compareSlice.offset && data == compareSlice.data) {
+      return true
+    }
+
+    for (i <- 0 to length) {
+      if (data(offset + i) != compareSlice.data(compareSlice.offset + i)) {
+        return false
+      }
+    }
+    true
+  }
+
+  override def hashCode(): Int = {
+    if (hash != 0) {
+      return hash
+    }
+
+    var result: Int = length
+    for (i <- offset to offset + length) {
+      result = 31 * result + data(i)
+    }
+    if (result == 0) {
+      result = 1
+    }
+    hash = result
+    hash
+  }
+
   override def compareTo(o: Slice): Int = {
-    1
+    if (this == o) {
+      return 0
+    }
+    if (this.data == o.data && length == o.length && offset == o.offset) {
+      return 0
+    }
+    val minLength: Int = math.min(this.length, data.length)
+    for (i <- offset to offset + minLength) {
+      val thisByte: Int = this.data(i) & 0xFF
+      val oByte: Int = o.data(i) & 0xFF
+      if (thisByte != oByte) {
+        return thisByte - oByte
+      }
+    }
+    this.length - o.length
+  }
+
+  def toString(charset: Charset): String = {
+    toString(0, length, charset)
+  }
+
+  def toString(index: Int, length: Int, charset: Charset): String = {
+    if (length == 0) {
+      ""
+    } else {
+      Slices.decodeString(toByteBuffer(index, length), charset)
+    }
+  }
+
+  override def toString: String = {
+    getClass.getSimpleName + "(length=" + length + ")"
   }
 }
 
@@ -281,5 +377,6 @@ object SliceMain {
     println(byte)
     println(byte.toLong << 32)
     println((byte & 0XFF).toLong << 32)
+    val slice: Slice = new Slice(1)
   }
 }
