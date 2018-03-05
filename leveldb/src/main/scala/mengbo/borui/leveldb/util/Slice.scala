@@ -378,5 +378,8 @@ object SliceMain {
     println(byte.toLong << 32)
     println((byte & 0XFF).toLong << 32)
     val slice: Slice = new Slice(1)
+    val temp: Array[Char] = new Array[Char](1)
+    temp(0) = 'H'
+    println(String.valueOf(temp))
   }
 }

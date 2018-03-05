@@ -39,7 +39,7 @@ object Slices {
 
   def getDecoder(charset: Charset): CharsetDecoder = {
     if (charset == null) {
-      NullPointerException
+      throw new NullPointerException
     }
     val map: util.Map[Charset, CharsetDecoder] = decoders.get()
     var decoder: CharsetDecoder = map.get(charset)

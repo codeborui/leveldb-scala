@@ -60,15 +60,15 @@ abstract class SliceOutput extends OutputStream with DataOutput{
 
   def toString(charset: Charset): String
 
-  override def writeChar(v: Int): Unit = UnsupportedOperationException
+  override def writeChar(v: Int): Unit = throw new UnsupportedOperationException
 
-  override def writeChars(s: String): Unit = UnsupportedOperationException
+  override def writeChars(s: String): Unit = throw new UnsupportedOperationException
 
-  override def writeUTF(s: String): Unit = UnsupportedOperationException
+  override def writeUTF(s: String): Unit = throw new UnsupportedOperationException
 
-  override def writeFloat(v: Float): Unit = UnsupportedOperationException
+  override def writeFloat(v: Float): Unit = throw new UnsupportedOperationException
 
-  override def writeDouble(v: Double): Unit = UnsupportedOperationException
+  override def writeDouble(v: Double): Unit = throw new UnsupportedOperationException
 
-  override def writeBytes(s: String): Unit = UnsupportedOperationException
+  override def writeBytes(s: String): Unit = throw new UnsupportedOperationException
 }

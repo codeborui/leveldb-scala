@@ -110,7 +110,7 @@ final class SliceInput(slice: Slice) extends InputStream with DataInput {
 
   def readBytes(slice: Slice, length: Int): Unit = {
     if (length > slice.getLength) {
-      IndexOutOfBoundsException
+      throw new IndexOutOfBoundsException
     }
     readBytes(slice, 0, length)
   }

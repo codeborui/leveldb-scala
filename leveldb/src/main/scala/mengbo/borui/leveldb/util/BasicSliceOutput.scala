@@ -56,9 +56,8 @@ class BasicSliceOutput(slice: Slice) extends SliceOutput {
 
   override def writeBytes(input: SliceInput, length: Int): Unit = {
     if (length > input.available()) {
-      IndexOutOfBoundsException
+      throw new IndexOutOfBoundsException
     }
-    writeBytes(input.)
   }
 
   override def writeBytes(source: Array[Byte]): Unit = {
