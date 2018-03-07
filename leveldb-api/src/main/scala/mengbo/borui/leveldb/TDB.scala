@@ -8,5 +8,9 @@ import java.io.Closeable
   */
 trait TDB extends Iterable[(Array[Byte], Array[Byte])] with Closeable{
 
-  def get(key : Array[Byte]) : Array[Byte]
+  @throws(classOf[DBException])
+  def put(key : Array[Byte], value: Array[Byte]): Unit
+
+  @throws(classOf[DBException])
+  def put(key: Array[Byte], value: Array[Byte], options: WriteOptions): TSnapshot
 }

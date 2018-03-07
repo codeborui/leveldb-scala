@@ -18,6 +18,22 @@ object Slices {
 
   val EMPTY_SLICE: Slice = new Slice(0)
 
+  def allocate(capacity: Int): Slice = {
+    if(capacity == 0) {
+      EMPTY_SLICE
+    } else {
+      new Slice(capacity)
+    }
+  }
+
+  def wrappedBuffer(array: Array[Byte]): Slice = {
+    if (array.length == 0) {
+      EMPTY_SLICE
+    } else {
+      new Slice(array)
+    }
+  }
+
   def decodeString(src: ByteBuffer, charset: Charset): String = {
     val decoder: CharsetDecoder = getDecoder(charset)
     val charBuffer: CharBuffer = CharBuffer.allocate(

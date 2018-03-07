@@ -69,20 +69,77 @@ class BasicSliceOutput(slice: Slice) extends SliceOutput {
     size += len
   }
 
-  override def writeBytes(byteBuffer: ByteBuffer): Unit = ???
+  override def writeBytes(byteBuffer: ByteBuffer): Unit = {
+    val len: Int = byteBuffer.remaining()
+    slice.setBytes(size, byteBuffer)
+    size = size + len
+  }
 
   @throws(classOf[IOException])
-  override def writeBytes(in: InputStream, length: Int): Unit = ???
+  override def writeBytes(in: InputStream, length: Int): Int = {
+    val writableBytes: Int = slice.setBytes(size, in, length)
+    if (writableBytes > 0) {
+      size += writableBytes
+    }
+    writableBytes
+  }
 
   @throws(classOf[IOException])
-  override def writeBytes(in: ScatteringByteChannel, length: Int): Unit = ???
+  override def writeBytes(in: ScatteringByteChannel, length: Int): Int = {
+    val writableBytes: Int = slice.setBytes(size, in, length)
+    if (writableBytes > 0) {
+      size += writableBytes
+    }
+    writableBytes
+  }
 
   @throws(classOf[IOException])
-  override def writeBytes(in: FileChannel, position: Int, length: Int): Unit = ???
+  override def writeBytes(in: FileChannel, position: Int, length: Int): Int = {
+    val writableBytes: Int = slice.setBytes(size, in, position, length)
+    if (writableBytes > 0) {
+      size += writableBytes
+    }
+    writableBytes
+  }
 
-  override def writeZero(length: Int): Unit = ???
+  override def writeZero(length: Int): Unit = {
+    if (length == 0) {
+      return
+    }
+    if (length < 0) {
+      throw new IllegalArgumentException("length must be 0 or greater than 0.")
+    }
+    val nLong: Int = length >>> 3
+    val nBytes: Int = length & 7
+    for (i <- 0 to nLong) {
+      writeLong(0)
+    }
+    if (nBytes == 4) {
+      writeInt(0)
+    }
+    else if (nBytes < 4) {
+      for (i <- 0 to nBytes) {
+        writeByte(0.toByte)
+      }
+    }
+    else {
+      writeInt(0)
+      for (i <- 0 to nBytes - 4) {
+        writeByte(0.toByte)
+      }
+    }
+  }
 
-  override def getSlice(): Slice = slice
+  override def getSlice(): Slice = {
+    slice.slice(0, size)
+  }
 
-  override def toString(charset: Charset): String = ???
+
+  override def toString: String = {
+    getClass.getSimpleName + "size=" + size + ", capacity=" + slice.getLength + ")"
+  }
+
+  override def toString(charset: Charset): String = {
+    slice.toString(charset)
+  }
 }
