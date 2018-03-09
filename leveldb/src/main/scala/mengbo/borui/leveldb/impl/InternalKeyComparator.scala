@@ -21,6 +21,18 @@ class InternalKeyComparator(userComparator: UserComparator) extends Comparator[I
   }
 
   def isOrdered(keys: Iterable[InternalKey]): Boolean = {
-
+    val iterator: Iterator[InternalKey] = keys.iterator
+    if (!iterator.hasNext) {
+      return true
+    }
+    var previous: InternalKey = iterator.next()
+    while (iterator.hasNext) {
+      val current: InternalKey = iterator.next()
+      if (compare(previous, current) > 0) {
+        return false
+      }
+      previous = current
+    }
+    true
   }
 }
